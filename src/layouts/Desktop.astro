@@ -1,0 +1,83 @@
+---
+import '@fontsource-variable/jetbrains-mono/wght.css';
+import '@fontsource/charis-sil/400.css';
+import '@fontsource/charis-sil/400-italic.css';
+import '@fontsource/charis-sil/700.css';
+import '../styles/global.css';
+import '../styles/overlays.css';
+
+import monoFont from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
+import textFont from '@fontsource/charis-sil/files/charis-sil-latin-400-normal.woff2?url';
+
+import Bar from '../components/Bar.astro';
+import Overlays from '../components/Overlays.astro';
+import Statusline from '../components/Statusline.astro';
+import { getPrinciples } from '../lib/principles';
+import { themes } from '../lib/themes';
+import { site, url } from '../site';
+
+interface Props {
+  /** Page title, without the site name. */
+  title?: string;
+  description?: string;
+  /** Number of the principle on this page, so the bar can mark its workspace. */
+  current?: number;
+  /** Repository path of the file behind this page, for "Suggest an edit". */
+  source?: string;
+  /** Extra class for the desktop grid, which picks the window layout. */
+  layout: string;
+}
+
+const { title, description = site.description, current, source, layout } = Astro.props;
+const principles = await getPrinciples();
+const pageTitle = title ? `${title} – ${site.name}` : `${site.name}: ${site.title}`;
+const themeIds = themes.map((theme) => theme.id);
+const defaults = site.themes;
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+---
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:title" content={title ?? site.title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#1a1b26" />
+    <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
+    <link rel="alternate" type="text/markdown" href={url('/llms.txt')} title="Guidelines for agents (llms.txt)" />
+    <link rel="preload" href={monoFont} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={textFont} as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href={url('/themes.css')} />
+    <script is:inline define:vars={{ themeIds, defaults }}>
+      // Pick the theme before first paint: the visitor's choice if they made one,
+      // otherwise Omarchy's default, or a light theme if their system prefers light.
+      var root = document.documentElement;
+      root.classList.remove('no-js');
+      var theme = null;
+      try {
+        theme = localStorage.getItem('omartsy:theme');
+      } catch (e) {}
+      if (themeIds.indexOf(theme) === -1) {
+        theme = matchMedia('(prefers-color-scheme: light)').matches ? defaults.light : defaults.dark;
+      }
+      root.setAttribute('data-theme', theme);
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <Bar principles={principles} current={current} />
+    <main id="main" class:list={['desktop', layout]}>
+      <slot />
+    </main>
+    <Statusline source={source} />
+    <Overlays />
+    <script>
+      import '../scripts/desktop';
+    </script>
+  </body>
+</html>

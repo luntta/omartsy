@@ -1,0 +1,7 @@
+---
+// The principles are listed on the home page. Built as a page rather than a
+// config redirect so the target keeps the configured base path.
+import { url } from '../../site';
+
+return Astro.redirect(url('/'));
+---

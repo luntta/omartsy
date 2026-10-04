@@ -1,0 +1,368 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import Desktop from '../../layouts/Desktop.astro';
+import { glyph } from '../../lib/glyphs';
+import { getPrinciples, keyFor, markEvidence, smarten, type Principle } from '../../lib/principles';
+import { site, url } from '../../site';
+
+export const getStaticPaths = (async () => {
+  const principles = await getPrinciples();
+  return principles.map((principle, i) => ({
+    params: { slug: principle.id },
+    props: { principle, prev: principles[i - 1], next: principles[i + 1] },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  principle: Principle;
+  prev?: Principle;
+  next?: Principle;
+}
+
+const { principle, prev, next } = Astro.props;
+const { data } = principle;
+const { headings } = await render(principle);
+const html = markEvidence(principle.rendered?.html ?? '');
+
+// Contents: the three parts, with the practices listed under In practice.
+const sections = headings
+  .filter((h) => h.depth === 2)
+  .map((h2) => ({
+    ...h2,
+    children: headings.filter(
+      (h3) =>
+        h3.depth === 3 &&
+        headings.indexOf(h3) > headings.indexOf(h2) &&
+        !headings.slice(headings.indexOf(h2) + 1, headings.indexOf(h3)).some((h) => h.depth === 2),
+    ),
+  }));
+
+const title = smarten(data.title);
+const doctrineLink = `${site.doctrine}#${data.anchor}`;
+---
+
+<Desktop
+  title={title}
+  description={smarten(data.summary)}
+  current={data.number}
+  source={principle.filePath}
+  layout="principle"
+>
+  <header class="window page-head">
+    <h1 id="page-title">{title}</h1>
+    <p class="summary">{smarten(data.summary)}</p>
+  </header>
+
+  <div class="page-side">
+    <aside class="window doctrine" aria-labelledby="doctrine-label">
+      <h2 id="doctrine-label" class="window-label">
+        <span class="glyph" aria-hidden="true">{glyph.quote}</span>
+        From the doctrine
+      </h2>
+      <blockquote cite={doctrineLink}>
+        <p>{smarten(data.quote)}</p>
+      </blockquote>
+      <p class="doctrine-source">
+        <a href={doctrineLink}>{smarten(data.tenet)}</a>
+      </p>
+    </aside>
+
+    <nav class="window toc" aria-labelledby="toc-label">
+      <h2 id="toc-label" class="window-label">On this page</h2>
+      <ol>
+        {
+          sections.map((section) => (
+            <li>
+              <a href={`#${section.slug}`}>{section.text}</a>
+              {section.children.length > 0 && (
+                <ol>
+                  {section.children.map((child) => (
+                    <li>
+                      <a href={`#${child.slug}`}>{child.text}</a>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    <nav class="window pager" aria-label="More principles">
+      {
+        prev ? (
+          <a class="pager-link" rel="prev" data-pager="h" href={url(`/principles/${prev.id}/`)}>
+            <kbd aria-hidden="true">h</kbd>
+            <span>
+              <span class="pager-dir">Previous</span>
+              <span class="pager-title">
+                {keyFor(prev.data.number)} {smarten(prev.data.title)}
+              </span>
+            </span>
+          </a>
+        ) : (
+          <a class="pager-link" data-pager="h" href={url('/')}>
+            <kbd aria-hidden="true">h</kbd>
+            <span>
+              <span class="pager-dir">Back to</span>
+              <span class="pager-title">All principles</span>
+            </span>
+          </a>
+        )
+      }
+      {
+        next ? (
+          <a class="pager-link" rel="next" data-pager="l" href={url(`/principles/${next.id}/`)}>
+            <kbd aria-hidden="true">l</kbd>
+            <span>
+              <span class="pager-dir">Next</span>
+              <span class="pager-title">
+                {keyFor(next.data.number)} {smarten(next.data.title)}
+              </span>
+            </span>
+          </a>
+        ) : (
+          <a class="pager-link" data-pager="l" href={url('/')}>
+            <kbd aria-hidden="true">l</kbd>
+            <span>
+              <span class="pager-dir">Back to</span>
+              <span class="pager-title">All principles</span>
+            </span>
+          </a>
+        )
+      }
+    </nav>
+  </div>
+
+  <article class="window page-body" data-main aria-labelledby="page-title">
+    <div class="prose" set:html={html} />
+    <p class="page-foot">
+      <span class="glyph" aria-hidden="true">{glyph.markdown}</span>
+      <a href={url(`/principles/${principle.id}.md`)}>Read this principle as Markdown</a>
+    </p>
+  </article>
+</Desktop>
+
+<style>
+  /*
+   * The reading window is as wide as a comfortable line plus its padding, and
+   * the pair sits in the middle of the desktop with wallpaper either side,
+   * instead of a wide window around a narrow column of text.
+   */
+  :global(.desktop.principle) {
+    grid-template-columns: minmax(0, calc(var(--measure) + var(--pad) * 2 + 4px)) minmax(17rem, 22rem);
+    grid-template-areas:
+      'head side'
+      'body side';
+    justify-content: center;
+  }
+
+  .page-head {
+    grid-area: head;
+    padding: var(--pad);
+  }
+
+  .page-body {
+    grid-area: body;
+    padding: var(--pad);
+  }
+
+  .page-side {
+    grid-area: side;
+    align-self: start;
+    position: sticky;
+    top: calc(var(--bar-height) + var(--gap-out));
+    max-height: calc(100vh - var(--bar-height) - var(--gap-out) * 2);
+    overflow: auto;
+    scrollbar-width: thin;
+    display: grid;
+    gap: calc(var(--gap-in) * 2);
+  }
+
+  h1 {
+    max-width: 22ch;
+    margin: 0 0 1rem;
+    color: var(--fg-bright);
+    font: 750 clamp(1.9rem, 1.15rem + 2.6vw, 3.1rem) / 1.08 var(--font-mono);
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  .summary {
+    max-width: 56ch;
+    margin: 0;
+    color: var(--fg);
+    font-size: clamp(1.125rem, 1rem + 0.45vw, 1.3rem);
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .doctrine {
+    padding: 1.25rem 1.4rem 1.3rem;
+  }
+
+  .doctrine blockquote {
+    margin: 0;
+  }
+
+  .doctrine blockquote p {
+    margin: 0;
+    color: var(--fg-bright);
+    font-size: 1.0625rem;
+    font-style: italic;
+    line-height: 1.55;
+    text-wrap: pretty;
+  }
+
+  .doctrine-source {
+    margin: 0.9rem 0 0;
+    font: 600 0.8125rem/1.4 var(--font-mono);
+  }
+
+  .doctrine-source a {
+    color: var(--accent-text);
+  }
+
+  .toc {
+    padding: 1.1rem 0.6rem 1rem;
+  }
+
+  .toc .window-label {
+    padding: 0 0.8rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font: 500 0.8125rem/1.35 var(--font-mono);
+  }
+
+  .toc a {
+    display: block;
+    padding: 0.32rem 0.8rem;
+    color: var(--fg);
+    text-decoration: none;
+  }
+
+  .toc a:hover,
+  .toc a:focus-visible {
+    background: var(--state-hover);
+    color: var(--accent-text);
+    outline: none;
+  }
+
+  .toc > ol > li > a {
+    color: var(--fg-bright);
+    font-weight: 700;
+  }
+
+  .toc ol ol a {
+    padding-left: 1.6rem;
+    color: var(--fg-dim);
+  }
+
+  .pager {
+    display: grid;
+  }
+
+  .pager-link {
+    padding: 0.8rem 1rem;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: 0.8rem;
+    color: var(--fg);
+    text-decoration: none;
+  }
+
+  .pager-link + .pager-link {
+    border-top: 1px solid var(--rule);
+  }
+
+  .pager-link:hover,
+  .pager-link:focus-visible {
+    background: var(--state-hover);
+    outline: none;
+  }
+
+  .pager-link:hover kbd,
+  .pager-link:focus-visible kbd {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .pager-dir {
+    display: block;
+    color: var(--fg-dim);
+    font: 500 0.75rem/1.5 var(--font-mono);
+  }
+
+  .pager-title {
+    display: block;
+    color: var(--fg-bright);
+    font: 650 0.875rem/1.4 var(--font-mono);
+  }
+
+  .pager-link:hover .pager-title,
+  .pager-link:focus-visible .pager-title {
+    color: var(--accent-text);
+  }
+
+  /* The window is sized to the measure, so spanning it matches the prose above. */
+  .page-foot {
+    margin: 3rem 0 0;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    gap: 0.6em;
+    align-items: baseline;
+    color: var(--fg-dim);
+    font: 500 0.8125rem/1.5 var(--font-mono);
+  }
+
+  .page-foot a {
+    color: var(--fg-dim);
+  }
+
+  .page-foot a:hover {
+    color: var(--accent-text);
+  }
+
+  @media (max-width: 64rem) {
+    :global(.desktop.principle) {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'head'
+        'doctrine'
+        'body'
+        'pager';
+    }
+
+    .page-side {
+      display: contents;
+    }
+
+    .doctrine {
+      grid-area: doctrine;
+    }
+
+    .toc {
+      display: none;
+    }
+
+    .pager {
+      grid-area: pager;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pager-link + .pager-link {
+      border-top: 0;
+      border-left: 1px solid var(--rule);
+    }
+  }
+</style>

@@ -1,0 +1,211 @@
+---
+import { url } from '../site';
+import { glyph } from '../lib/glyphs';
+import { keyFor, smarten, type Principle } from '../lib/principles';
+
+interface Props {
+  principles: Principle[];
+  /** Number of the principle being read, if any. */
+  current?: number;
+}
+
+const { principles, current } = Astro.props;
+---
+
+<header class="bar">
+  <nav class="bar-left" aria-label="Principles">
+    <a class="bar-item bar-home" href={url('/')}>
+      <span class="glyph" aria-hidden="true">{glyph.palette}</span>
+      <span class="bar-wordmark">omartsy</span>
+    </a>
+    <ol class="workspaces">
+      {
+        principles.map((p) => {
+          const n = p.data.number;
+          const isCurrent = n === current;
+          const title = smarten(p.data.title);
+          return (
+            <li>
+              <a
+                class:list={['bar-item', 'workspace', { current: isCurrent }]}
+                href={url(`/principles/${p.id}/`)}
+                aria-current={isCurrent ? 'page' : undefined}
+                title={`${n}. ${title}`}
+                data-key={keyFor(n)}
+                data-number={n}
+              >
+                <span class:list={[{ glyph: isCurrent }]} aria-hidden="true">
+                  {isCurrent ? glyph.workspace : keyFor(n)}
+                </span>
+                <span class="visually-hidden">{`Principle ${n}: ${title}`}</span>
+              </a>
+            </li>
+          );
+        })
+      }
+    </ol>
+  </nav>
+
+  <div class="bar-center">
+    <time class="clock needs-js" data-clock></time>
+  </div>
+
+  <div class="bar-right needs-js">
+    <button type="button" class="bar-item bar-keys" popovertarget="keys-panel" title="Keys (?)">
+      <span class="glyph" aria-hidden="true">{glyph.keyboard}</span>
+      <span class="visually-hidden">Keyboard shortcuts</span>
+    </button>
+    <button type="button" class="bar-item bar-theme" popovertarget="theme-panel" title="Theme (t)">
+      <span class="glyph" aria-hidden="true">{glyph.theme}</span>
+      <span class="visually-hidden">Theme:</span>
+      <span class="theme-name"></span>
+    </button>
+  </div>
+</header>
+
+<style>
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    height: var(--bar-height);
+    padding: 0 calc(var(--gap-out) / 2);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    background: var(--bg);
+    color: var(--fg);
+    font: 500 0.8125rem/1 var(--font-mono);
+  }
+
+  .bar-left,
+  .bar-right {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .bar-right {
+    justify-self: end;
+  }
+
+  .bar-center {
+    justify-self: center;
+  }
+
+  .bar-item {
+    height: var(--bar-height);
+    padding: 0 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .bar-item:hover {
+    background: var(--state-hover);
+  }
+
+  .bar-item:active {
+    background: var(--state-pressed);
+  }
+
+  .bar-item:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .bar-item .glyph {
+    font-size: 1.05rem;
+  }
+
+  .bar-home {
+    color: var(--fg-bright);
+    font-weight: 700;
+  }
+
+  .bar-home .glyph {
+    color: var(--accent-text);
+  }
+
+  .workspaces {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Omarchy draws workspaces 20px wide; at this size that's about 1.65rem. */
+  .workspace {
+    width: 1.65rem;
+    padding: 0;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .workspace.current {
+    color: var(--fg-bright);
+  }
+
+  .workspace.current .glyph {
+    font-size: 0.95rem;
+  }
+
+  .clock {
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .theme-name::after {
+    content: var(--theme-name);
+  }
+
+  /* Keyboard shortcuts mean nothing on a device without a keyboard. */
+  @media (hover: none) and (pointer: coarse) {
+    .bar-keys {
+      display: none;
+    }
+  }
+
+  @media (max-width: 52rem) {
+    .bar {
+      grid-template-columns: auto 1fr auto;
+    }
+
+    .bar-center {
+      visibility: hidden;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .bar-wordmark,
+    .bar-theme .theme-name {
+      display: none;
+    }
+
+    .bar-item {
+      padding: 0 0.5rem;
+    }
+
+    .workspace {
+      width: auto;
+      min-width: 1.5rem;
+      flex: 1;
+      padding: 0;
+    }
+
+    .bar-left {
+      flex: 1;
+    }
+
+    .workspaces {
+      flex: 1;
+      justify-content: space-between;
+    }
+  }
+</style>

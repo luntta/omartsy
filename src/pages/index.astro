@@ -1,0 +1,249 @@
+---
+import Desktop from '../layouts/Desktop.astro';
+import Fastfetch from '../components/Fastfetch.astro';
+import { glyph } from '../lib/glyphs';
+import { getPrinciples, keyFor, smarten } from '../lib/principles';
+import { site, url } from '../site';
+
+const principles = await getPrinciples();
+---
+
+<Desktop layout="home" source="src/pages/index.astro">
+  <Fastfetch count={principles.length} />
+
+  <section class="window intro" data-main aria-labelledby="thesis">
+    <div class="prose">
+      <p id="thesis" class="thesis">Work should be fun, but it should be productive.</p>
+      <p>
+        These are human interface guidelines for anyone making things for Omarchy: apps, TUIs, command-line tools,
+        shell plugins, themes, menus, scripts, and the agents that help build them.
+      </p>
+      <p>
+        They start where Omarchy starts, with <a href={site.doctrine}>the Doctrine</a>. Each of its ten lines becomes
+        one principle here, read as interface design. Every practice is backed by something Omarchy already does,
+        with a link to where it’s documented.
+      </p>
+
+      <h2 id="how-to-read">Best practice, never control</h2>
+      <p>
+        Everything here describes what tends to work in Omarchy, and why. None of it is a rule, and nobody is going to
+        enforce it. When you have a better idea, break a guideline on purpose and share what you learned. That’s how
+        these get better.
+      </p>
+      <p>Each principle quotes its line of the Doctrine, then comes in three parts:</p>
+      <ul class="parts">
+        <li>
+          <span class="glyph part-practice" aria-hidden="true">{glyph.practice}</span>
+          <span><strong>In practice:</strong> habits that work, each one backed by something Omarchy already does.</span>
+        </li>
+        <li>
+          <span class="glyph part-play" aria-hidden="true">{glyph.play}</span>
+          <span><strong>Room to play:</strong> where the principle leaves space for your own expression.</span>
+        </li>
+        <li>
+          <span class="glyph part-cut" aria-hidden="true">{glyph.cut}</span>
+          <span><strong>Paper cuts:</strong> common ways to get it wrong.</span>
+        </li>
+      </ul>
+      <p class="needs-js keys-hint">
+        Like Omarchy, this runs on the keyboard. <kbd>1</kbd> through <kbd>0</kbd> jump to a principle, and
+        <kbd>?</kbd> shows the rest.
+      </p>
+    </div>
+  </section>
+
+  <nav class="window principles" aria-labelledby="principles-title">
+    <h2 id="principles-title" class="window-label">The ten principles</h2>
+    <ol class="menu" data-menu>
+      {
+        principles.map((p) => (
+          <li>
+            <a class="menu-row" href={url(`/principles/${p.id}/`)}>
+              <kbd class="menu-key" aria-hidden="true">
+                {keyFor(p.data.number)}
+              </kbd>
+              <span class="menu-title">{smarten(p.data.title)}</span>
+              <span class="menu-tenet">
+                <span class="visually-hidden">From the doctrine: </span>
+                {smarten(p.data.tenet)}
+              </span>
+              <span class="menu-summary">{smarten(p.data.summary)}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </nav>
+</Desktop>
+
+<style>
+  /* A Hyprland dwindle split: About across the top, then the intro beside the list. */
+  :global(.desktop.home) {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'about about'
+      'intro menu';
+  }
+
+  :global(.fastfetch) {
+    grid-area: about;
+  }
+
+  .intro {
+    grid-area: intro;
+    padding: var(--pad);
+  }
+
+  .principles {
+    grid-area: menu;
+    padding: calc(var(--pad) * 0.75) calc(var(--pad) * 0.5);
+  }
+
+  .thesis {
+    margin: 0 0 1.4rem;
+    color: var(--fg-bright);
+    font-size: clamp(1.6rem, 1.1rem + 1.6vw, 2.35rem);
+    line-height: 1.15;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+  }
+
+  .intro h2 {
+    margin-top: 2.25em;
+  }
+
+  .parts {
+    list-style: none;
+    padding: 0;
+  }
+
+  .parts li {
+    display: grid;
+    grid-template-columns: 1.6em 1fr;
+    align-items: baseline;
+  }
+
+  .parts .glyph {
+    font-size: 1.05em;
+  }
+
+  .part-practice {
+    color: var(--green-text);
+  }
+
+  .part-play {
+    color: var(--magenta-text);
+  }
+
+  .part-cut {
+    color: var(--red-text);
+  }
+
+  .keys-hint {
+    margin-top: 1.6em !important;
+    color: var(--fg-dim);
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    .keys-hint {
+      display: none;
+    }
+  }
+
+  .principles .window-label {
+    padding: 0 calc(var(--pad) * 0.5);
+  }
+
+  .menu {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Rows behave like the Omarchy menu: hover, the keyboard cursor, and focus look the same. */
+  .menu-row {
+    padding: 0.8rem calc(var(--pad) * 0.5);
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      'key title tenet'
+      '. summary summary';
+    align-items: baseline;
+    column-gap: 0.75rem;
+    color: var(--fg);
+    text-decoration: none;
+  }
+
+  .menu-row:hover,
+  .menu-row:focus-visible {
+    background: var(--state-hover);
+    outline: none;
+  }
+
+  .menu-row:active {
+    background: var(--state-pressed);
+  }
+
+  .menu-key {
+    grid-area: key;
+    justify-self: start;
+  }
+
+  .menu-title {
+    grid-area: title;
+    color: var(--fg-bright);
+    font: 650 1.0625rem/1.35 var(--font-mono);
+  }
+
+  .menu-row:hover .menu-title,
+  .menu-row:focus-visible .menu-title {
+    color: var(--accent-text);
+  }
+
+  .menu-row:hover .menu-key,
+  .menu-row:focus-visible .menu-key {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .menu-tenet {
+    grid-area: tenet;
+    color: var(--fg-dim);
+    font: 400 0.75rem/1.35 var(--font-mono);
+    text-align: right;
+  }
+
+  .menu-summary {
+    grid-area: summary;
+    margin-top: 0.3rem;
+    color: var(--fg-dim);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 62rem) {
+    :global(.desktop.home) {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'about'
+        'intro'
+        'menu';
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .menu-row {
+      grid-template-columns: 2rem minmax(0, 1fr);
+      grid-template-areas:
+        'key title'
+        '. tenet'
+        '. summary';
+    }
+
+    .menu-tenet {
+      text-align: left;
+      margin-top: 0.15rem;
+    }
+  }
+</style>
