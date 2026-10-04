@@ -2,6 +2,8 @@
 
 Human Interface Guidelines for Omarchy.
 
+Read them at **[luntta.fi/omartsy](https://luntta.fi/omartsy/)**.
+
 These guidelines are for anyone making things for [Omarchy](https://omarchy.org): apps, TUIs, command-line tools, shell plugins, themes, menus, scripts, and the agents that help build them. They're written from [the Omarchy Doctrine](https://omarchy.org/doctrine/). Each of its ten lines becomes one principle, read as interface design.
 
 Work should be fun, but it should be productive. The guidelines describe best practice and leave room for expression. They are never about control.
@@ -31,12 +33,18 @@ Each principle quotes its line of the doctrine, then comes in three parts:
 
 ```sh
 npm install
-npm run dev      # http://localhost:4321
+npm run dev      # http://localhost:4321/omartsy/
 npm run build    # static site in dist/
 npm run check    # type-check the Astro project
 ```
 
-Requires Node 22.12 or newer (Astro 7).
+Requires Node 22.12 or newer (Astro 7). The site lives under `/omartsy/`, locally too, because that's where it's published. Build links with `url()` from `src/site.ts` so they keep that prefix.
+
+## Publishing
+
+Every push to `main` builds the site and publishes it with GitHub Pages ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)). It's a project site of [luntta.github.io](https://github.com/luntta/luntta.github.io), which carries the `luntta.fi` domain, so it appears at `luntta.fi/omartsy` with no `CNAME` of its own. The path comes from `site` and `base` in `astro.config.mjs`.
+
+Pages needs one setting: in the repository's Settings > Pages, set the source to **GitHub Actions**.
 
 ## Writing a principle
 
