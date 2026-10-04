@@ -13,6 +13,8 @@ Agents work a computer the way scripts always have, through commands, files, and
 
 The good news is that designing for agents is mostly just designing well. Clear names, discoverable commands, honest exit codes, and machine-readable output help everyone, with or without hands.
 
+These are still human interface guidelines. An agent on Omarchy works for the person who owns the machine, and whatever makes an interface legible to the agent almost always makes it better for that person too.
+
 ## In practice
 
 ### Give every action a command
