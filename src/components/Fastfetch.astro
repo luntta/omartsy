@@ -1,0 +1,191 @@
+---
+// The About screen, the way Omarchy draws its own: fastfetch, with the
+// wordmark on the left and the facts on the right.
+import { omarchyVersion } from '../lib/themes';
+import { path, viewBox } from '../lib/wordmark';
+import { site } from '../site';
+
+interface Props {
+  count: number;
+}
+
+const { count } = Astro.props;
+const colors = ['muted', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'fg'];
+const d = path();
+---
+
+<section class="window fastfetch" aria-labelledby="site-title">
+  <h1 id="site-title" class="visually-hidden">omartsy: {site.title}</h1>
+  <div class="fastfetch-body">
+  <div class="wordmark" aria-hidden="true">
+    <svg class="wordmark-art" viewBox={viewBox}><path d={d} /></svg>
+    <svg class="wordmark-glint" viewBox={viewBox}><path d={d} /></svg>
+  </div>
+  <div class="facts">
+    <p class="facts-title" aria-hidden="true"><span>you</span>@<span>omarchy</span></p>
+    <p class="facts-rule" aria-hidden="true">{'-'.repeat(11)}</p>
+    <dl>
+      <div><dt>Guidelines</dt><dd>Human interface</dd></div>
+      <div><dt>Version</dt><dd>{site.version}, {site.versionLabel}</dd></div>
+      <div><dt>Principles</dt><dd>{count}</dd></div>
+      <div><dt>Source</dt><dd><a href={site.doctrine}>The Omarchy Doctrine</a></dd></div>
+      <div><dt>Theme</dt><dd class="theme-name"></dd></div>
+      <div><dt>Fonts</dt><dd>JetBrains Mono, Charis SIL</dd></div>
+      {omarchyVersion && <div><dt>Palettes</dt><dd>Omarchy {omarchyVersion}</dd></div>}
+    </dl>
+    <p class="facts-colors" aria-hidden="true">
+      {colors.map((color) => <span style={`background: var(--${color})`} />)}
+    </p>
+  </div>
+  </div>
+</section>
+
+<style>
+  .fastfetch {
+    container-type: inline-size;
+    padding: var(--pad);
+  }
+
+  .fastfetch-body {
+    display: grid;
+    grid-template-columns: auto minmax(0, auto);
+    justify-content: start;
+    align-items: center;
+    gap: 1.5rem clamp(1.5rem, 4cqi, 3.5rem);
+  }
+
+  /* Sized to whatever room the facts leave beside it; stacked when that gets tight. */
+  .wordmark {
+    position: relative;
+    width: clamp(15rem, calc(100cqi - 21rem), 44rem);
+  }
+
+  .wordmark svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .wordmark-art {
+    fill: var(--fg-bright);
+  }
+
+  /* The glint from Omarchy's About screen: a band of green leaning across the art. */
+  .wordmark-glint {
+    position: absolute;
+    inset: 0;
+    fill: var(--green);
+    -webkit-mask-image: linear-gradient(115deg, transparent 40%, #000 46% 50%, transparent 56%);
+    mask-image: linear-gradient(115deg, transparent 40%, #000 46% 50%, transparent 56%);
+    -webkit-mask-size: 300% 100%;
+    mask-size: 300% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: 120% 0;
+    mask-position: 120% 0;
+    animation: glint 1.6s 400ms ease-in-out both;
+  }
+
+  /* Once on arrival, and again whenever the pointer comes back to the window. */
+  .fastfetch:hover .wordmark-glint {
+    animation: glint-again 1.6s ease-in-out both;
+  }
+
+  @keyframes glint {
+    from {
+      -webkit-mask-position: 120% 0;
+      mask-position: 120% 0;
+    }
+    to {
+      -webkit-mask-position: -20% 0;
+      mask-position: -20% 0;
+    }
+  }
+
+  @keyframes glint-again {
+    from {
+      -webkit-mask-position: 120% 0;
+      mask-position: 120% 0;
+    }
+    to {
+      -webkit-mask-position: -20% 0;
+      mask-position: -20% 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wordmark-glint {
+      display: none;
+    }
+  }
+
+  .facts {
+    min-width: 0;
+    font: 400 0.875rem/1.6 var(--font-mono);
+  }
+
+  .facts p,
+  .facts dl {
+    margin: 0;
+  }
+
+  .facts-title {
+    color: var(--fg-bright);
+    font-weight: 700;
+  }
+
+  .facts-title span {
+    color: var(--accent-text);
+  }
+
+  .facts-rule {
+    color: var(--fg-dim);
+  }
+
+  .facts dl > div {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.6em;
+  }
+
+  .facts dt {
+    color: var(--accent-text);
+    font-weight: 700;
+  }
+
+  .facts dt::after {
+    content: ':';
+  }
+
+  .facts dd {
+    margin: 0;
+  }
+
+  .facts a {
+    color: inherit;
+  }
+
+  .theme-name::after {
+    content: var(--theme-name);
+  }
+
+  .facts-colors {
+    margin-top: 0.9rem !important;
+    display: flex;
+  }
+
+  .facts-colors span {
+    width: 1.5rem;
+    height: 1.1rem;
+  }
+
+  @container (max-width: 46rem) {
+    .fastfetch-body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .wordmark {
+      width: min(100%, 44rem);
+    }
+  }
+</style>

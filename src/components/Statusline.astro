@@ -1,0 +1,76 @@
+---
+import { editUrl, site, url } from '../site';
+
+interface Props {
+  /** Repository path of the file behind the page, if it has one. */
+  source?: string;
+}
+
+const { source } = Astro.props;
+---
+
+<footer class="statusline">
+  <span class="statusline-mode">{site.name} {site.version}</span>
+  <span class="statusline-segment">{site.versionLabel}</span>
+  <nav class="statusline-links" aria-label="About these guidelines">
+    {source && <a href={editUrl(source)}>Suggest an edit</a>}
+    <a href={site.doctrine}>The Omarchy Doctrine</a>
+    <a href={site.manual}>The Omarchy Manual</a>
+    <a href={url('/llms.txt')}>llms.txt</a>
+  </nav>
+  <span class="statusline-keys needs-js"><kbd>?</kbd> keys</span>
+</footer>
+
+<style>
+  /* A status line in the spirit of tmux and LazyVim: the mode block on the left, segments after it. */
+  .statusline {
+    width: 100%;
+    max-width: 100rem;
+    margin: 0 auto;
+    padding: 0 var(--gap-out) var(--gap-out);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0 1.25rem;
+    color: var(--fg-dim);
+    font: 500 0.8125rem/2 var(--font-mono);
+  }
+
+  .statusline-mode {
+    padding: 0 0.75rem;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 700;
+  }
+
+  .statusline-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.25rem;
+  }
+
+  .statusline a {
+    color: var(--fg-dim);
+    text-decoration-color: transparent;
+  }
+
+  .statusline a:hover {
+    color: var(--accent-text);
+    text-decoration-color: currentColor;
+  }
+
+  .statusline-keys {
+    margin-left: auto;
+  }
+
+  .statusline kbd {
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    .statusline-keys {
+      display: none;
+    }
+  }
+</style>

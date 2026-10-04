@@ -1,0 +1,83 @@
+---
+import Desktop from '../layouts/Desktop.astro';
+import { getPrinciples, keyFor, smarten } from '../lib/principles';
+import { url } from '../site';
+
+const principles = await getPrinciples();
+---
+
+<Desktop title="Unknown page" layout="lost">
+  <section class="window terminal" data-main aria-labelledby="lost-title">
+    <h1 id="lost-title" class="visually-hidden">Unknown page</h1>
+    <pre><span class="prompt">~ ❯</span> omartsy <span data-path>this-page</span>
+<span class="error">Unknown page: <span data-path>this-page</span></span>
+It may have moved, or it never existed. Pick a principle below,
+or press <kbd>Backspace</kbd> to go back to all of them.</pre>
+    <ol class="lost-list">
+      {
+        principles.map((p) => (
+          <li>
+            <a href={url(`/principles/${p.id}/`)}>
+              <kbd aria-hidden="true">{keyFor(p.data.number)}</kbd> {smarten(p.data.title)}
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+</Desktop>
+
+<script>
+  for (const el of document.querySelectorAll('[data-path]')) el.textContent = location.pathname;
+</script>
+
+<style>
+  :global(.desktop.lost) {
+    max-width: 52rem;
+    align-content: center;
+  }
+
+  .terminal {
+    padding: var(--pad);
+    font: 400 0.9375rem/1.7 var(--font-mono);
+  }
+
+  pre {
+    margin: 0 0 1.5rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .prompt {
+    color: var(--green-text);
+  }
+
+  .error {
+    color: var(--red-text);
+  }
+
+  .lost-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    columns: 2 16rem;
+  }
+
+  .lost-list a {
+    display: block;
+    padding: 0.25rem 0.4rem;
+    color: var(--fg);
+    text-decoration: none;
+  }
+
+  .lost-list a:hover,
+  .lost-list a:focus-visible {
+    background: var(--state-hover);
+    color: var(--accent-text);
+    outline: none;
+  }
+
+  .lost-list kbd {
+    margin-right: 0.6rem;
+  }
+</style>

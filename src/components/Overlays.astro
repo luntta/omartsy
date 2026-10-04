@@ -1,0 +1,108 @@
+---
+import { glyph } from '../lib/glyphs';
+import { swatches, themes } from '../lib/themes';
+import { site } from '../site';
+---
+
+<div
+  id="theme-panel"
+  class="panel theme-panel needs-js"
+  popover
+  role="dialog"
+  aria-labelledby="theme-panel-title"
+  data-theme-panel
+  data-dark-default={site.themes.dark}
+  data-light-default={site.themes.light}
+>
+  <p class="panel-head">
+    <span class="glyph" aria-hidden="true">{glyph.theme}</span>
+    <span id="theme-panel-title">Theme</span>
+  </p>
+  <input
+    class="panel-filter"
+    type="text"
+    placeholder="Type to filter"
+    aria-labelledby="theme-panel-title"
+    role="combobox"
+    aria-expanded="true"
+    aria-controls="theme-list"
+    aria-autocomplete="list"
+    autocomplete="off"
+    spellcheck="false"
+    autofocus
+    data-theme-filter
+  />
+  <ul id="theme-list" class="theme-list" role="listbox" aria-labelledby="theme-panel-title">
+    {
+      themes.map((theme) => (
+        <li
+          id={`theme-option-${theme.id}`}
+          class="theme-option"
+          role="option"
+          aria-selected="false"
+          data-theme-id={theme.id}
+          data-search={`${theme.name} ${theme.mode}`.toLowerCase()}
+        >
+          <span class="swatches" aria-hidden="true">
+            {swatches(theme).map((color) => (
+              <span style={`background: ${color}`} />
+            ))}
+          </span>
+          <span class="theme-option-name">{theme.name}</span>
+          <span class="theme-option-check glyph" aria-hidden="true">
+            {glyph.check}
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="panel-empty" hidden data-theme-empty>No theme by that name.</p>
+  <p class="panel-hints" aria-hidden="true">
+    <span><kbd>↑</kbd><kbd>↓</kbd> preview</span>
+    <span><kbd>⏎</kbd> keep</span>
+    <span><kbd>esc</kbd> put it back</span>
+  </p>
+</div>
+
+<div id="keys-panel" class="panel keys-panel needs-js" popover role="dialog" aria-labelledby="keys-title">
+  <h2 id="keys-title" class="panel-head">
+    <span class="glyph" aria-hidden="true">{glyph.keyboard}</span>
+    Keys
+  </h2>
+  <dl class="keys">
+    <div>
+      <dt><kbd>1</kbd> … <kbd>0</kbd></dt>
+      <dd>Jump to a principle</dd>
+    </div>
+    <div>
+      <dt><kbd>h</kbd> <kbd>l</kbd></dt>
+      <dd>Previous or next principle</dd>
+    </div>
+    <div>
+      <dt><kbd>j</kbd> <kbd>k</kbd></dt>
+      <dd>Move down or up</dd>
+    </div>
+    <div>
+      <dt><kbd>Backspace</kbd></dt>
+      <dd>Back to all principles</dd>
+    </div>
+    <div>
+      <dt><kbd>t</kbd></dt>
+      <dd>Pick a theme</dd>
+    </div>
+    <div>
+      <dt><kbd>?</kbd></dt>
+      <dd>Show these keys</dd>
+    </div>
+    <div>
+      <dt><kbd>Esc</kbd></dt>
+      <dd>Close whatever is open</dd>
+    </div>
+  </dl>
+  <p class="keys-secret">
+    <span class="glyph" aria-hidden="true">{glyph.screensaver}</span>
+    There’s a screensaver in here somewhere. Type the computer’s name.
+  </p>
+</div>
+
+<div class="toasts" role="status" aria-live="polite" data-toasts></div>

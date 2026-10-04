@@ -1,0 +1,365 @@
+/*
+ * omartsy draws itself as an Omarchy desktop: a shell bar, Hyprland-tiled
+ * windows, and colors from whichever Omarchy theme is active. Color tokens
+ * come from /themes.css and are named after the roles in colors.toml.
+ */
+
+@font-face {
+  font-family: 'omartsy glyphs';
+  src: url('../assets/fonts/omartsy-glyphs.woff2') format('woff2');
+  font-display: block;
+  unicode-range: U+E000-F8FF, U+F0000-FFFFD;
+}
+
+:root {
+  --font-mono: 'JetBrains Mono Variable', 'omartsy glyphs', ui-monospace, monospace;
+  --font-text: 'Charis SIL', 'Bitstream Charter', Charter, 'omartsy glyphs', Georgia, serif;
+
+  /* Hyprland's defaults in Omarchy: gaps_in 5, gaps_out 10, border_size 2, rounding 0. */
+  --gap-in: 5px;
+  --gap-out: 10px;
+  --border-size: 2px;
+  --bar-height: 2rem;
+
+  /* The shell's state fills, straight from shell.toml: foreground at a few alphas. */
+  --state-normal: color-mix(in srgb, var(--fg) 4%, transparent);
+  --state-hover: color-mix(in srgb, var(--fg) 8%, transparent);
+  --state-selected: color-mix(in srgb, var(--fg) 18%, transparent);
+  --state-pressed: color-mix(in srgb, var(--fg) 22%, transparent);
+  --rule: color-mix(in srgb, var(--fg) 16%, transparent);
+  --scrim: color-mix(in srgb, var(--bg) 50%, transparent);
+
+  --measure: 68ch;
+  --pad: clamp(1.25rem, 0.6rem + 2.4vw, 2.75rem);
+}
+
+@media (pointer: coarse) {
+  :root {
+    --bar-height: 2.75rem;
+  }
+}
+
+/* -------------------------------------------------------------- base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg-darker);
+  color: var(--fg);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--bar-height) + var(--gap-out) * 2);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg-darker);
+  font: 400 1.0625rem/1.62 var(--font-text);
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  flex-direction: column;
+}
+
+::selection {
+  background: var(--selection);
+  color: var(--fg-bright);
+}
+
+a {
+  color: var(--accent-text);
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent-text) 45%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+code,
+kbd,
+pre,
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'calt' 0;
+}
+
+.glyph {
+  font-family: 'omartsy glyphs', var(--font-mono);
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  speak: never;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.no-js .needs-js {
+  display: none !important;
+}
+
+.skip {
+  position: absolute;
+  left: var(--gap-out);
+  top: -100px;
+  z-index: 100;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg);
+  border: var(--border-size) solid var(--accent);
+  font: 600 0.875rem var(--font-mono);
+}
+
+.skip:focus {
+  top: var(--gap-out);
+}
+
+/* A key, the way the manual writes them: `Super + K`. */
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0.05em 0.4em;
+  border: 1px solid color-mix(in srgb, var(--fg) 40%, transparent);
+  background: var(--state-normal);
+  color: var(--fg-bright);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ----------------------------------------------------------- desktop */
+
+.desktop {
+  flex: 1;
+  width: 100%;
+  max-width: 100rem;
+  margin: 0 auto;
+  padding: var(--gap-out);
+  display: grid;
+  gap: calc(var(--gap-in) * 2);
+  align-items: start;
+}
+
+/*
+ * A Hyprland window: no title bar, square corners, a 2px border. Focus follows
+ * the mouse, so the window under the pointer is the active one; with the
+ * pointer elsewhere, keyboard focus decides, then the page's main window.
+ */
+.window {
+  position: relative;
+  min-width: 0;
+  background: var(--bg);
+  border: var(--border-size) solid var(--border);
+}
+
+.window:hover,
+.desktop:not(:has(.window:hover)) .window:focus-within,
+.desktop:not(:has(.window:hover, .window:focus-within)) .window[data-main] {
+  border-image: var(--border-active-image) 1;
+}
+
+@media (hover: none) {
+  .window:hover {
+    border-image: none;
+  }
+}
+
+.window-label {
+  margin: 0 0 1rem;
+  color: var(--fg-dim);
+  font: 500 0.8125rem/1.4 var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.window-label .glyph {
+  color: var(--accent-text);
+  font-size: 1rem;
+}
+
+/* -------------------------------------------------------------- prose */
+
+.prose {
+  max-width: var(--measure);
+  text-wrap: pretty;
+  hanging-punctuation: first;
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose p,
+.prose ul,
+.prose ol {
+  margin: 0 0 1em;
+}
+
+.prose h2,
+.prose h3 {
+  font-family: var(--font-mono);
+  color: var(--fg-bright);
+  text-wrap: balance;
+  scroll-margin-top: calc(var(--bar-height) + var(--gap-out) * 3);
+}
+
+.prose h2 {
+  margin: 2.75em 0 1em;
+  padding-top: 1.25em;
+  border-top: 1px solid var(--rule);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6em;
+}
+
+/* The three parts of every principle carry the same glyph and hue everywhere. */
+.prose h2::before {
+  font-family: 'omartsy glyphs';
+  font-weight: 400;
+  font-size: 1.05em;
+}
+
+.prose h2#in-practice::before {
+  content: '\F0AD';
+  color: var(--green-text);
+}
+
+.prose h2#room-to-play::before {
+  content: '\F02B4';
+  color: var(--magenta-text);
+}
+
+.prose h2#paper-cuts::before {
+  content: '\F0C4';
+  color: var(--red-text);
+}
+
+.prose h3 {
+  margin: 2.25em 0 0.6em;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.prose h2 + h3 {
+  margin-top: 0;
+}
+
+.prose strong {
+  color: var(--fg-bright);
+  font-weight: 700;
+}
+
+.prose code {
+  padding: 0.08em 0.32em;
+  background: var(--state-hover);
+  color: var(--fg-bright);
+  font-size: 0.84em;
+  white-space: nowrap;
+}
+
+.prose ul {
+  padding-left: 1.4em;
+}
+
+.prose li + li {
+  margin-top: 0.35em;
+}
+
+/* Paper cuts are things to avoid, so they're marked like a failing test. */
+.prose h2#paper-cuts ~ ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.prose h2#paper-cuts ~ ul > li {
+  position: relative;
+  padding-left: 1.6em;
+}
+
+.prose h2#paper-cuts ~ ul > li::before {
+  content: '×';
+  position: absolute;
+  left: 0.15em;
+  top: -0.05em;
+  color: var(--red-text);
+  font: 700 1.15em/1.5 var(--font-mono);
+}
+
+/* "In Omarchy" paragraphs: the evidence that the practice is real. */
+.prose .evidence {
+  margin: 0.9em 0 0;
+  padding: 0.15em 0 0.15em 1.1em;
+  border-left: var(--border-size) solid color-mix(in srgb, var(--accent) 70%, transparent);
+  color: var(--fg);
+  font-size: 0.97em;
+}
+
+.prose .evidence strong:first-child {
+  display: block;
+  margin-bottom: 0.15em;
+  color: var(--accent-text);
+  font: 600 0.75rem/1.6 var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+/* ------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .bar,
+  .statusline,
+  .page-side,
+  .needs-js {
+    display: none !important;
+  }
+
+  .window {
+    border: 0;
+  }
+}

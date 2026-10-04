@@ -1,0 +1,303 @@
+/*
+ * Things that float above the desktop: panels that drop from the bar, toasts,
+ * and the screensaver. They're built and changed by scripts, so their styles
+ * live here rather than in a component.
+ */
+
+/* ------------------------------------------------------------ panels */
+
+/* Omarchy's popups: the theme's background, framed by the active border. */
+.panel {
+  margin: 0;
+  padding: 0.875rem;
+  border: var(--border-size) solid var(--border-active);
+  border-image: var(--border-active-image) 1;
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 0.875rem/1.5 var(--font-mono);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.panel::backdrop {
+  background: transparent;
+}
+
+.panel-head {
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  color: var(--fg-bright);
+  font: 700 0.875rem/1.4 var(--font-mono);
+}
+
+.panel-head .glyph {
+  color: var(--accent-text);
+  font-size: 1.1rem;
+}
+
+.panel-filter {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 40%, transparent);
+  border-radius: 0;
+  background: var(--state-normal);
+  color: var(--fg-bright);
+  font: inherit;
+}
+
+.panel-filter::placeholder {
+  color: var(--fg-dim);
+}
+
+.panel-filter:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.panel-hints {
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  color: var(--fg-dim);
+  font-size: 0.75rem;
+}
+
+.panel-hints kbd {
+  min-width: 1.4em;
+  margin-right: 0.2em;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+}
+
+.panel-empty {
+  margin: 0.75rem 0.5rem 0;
+  color: var(--fg-dim);
+}
+
+/* The theme picker drops from its widget at the right end of the bar. */
+.theme-panel {
+  position: fixed;
+  inset: calc(var(--bar-height) + var(--gap-out)) var(--gap-out) auto auto;
+  width: min(22rem, calc(100vw - var(--gap-out) * 2));
+  max-height: calc(100vh - var(--bar-height) - var(--gap-out) * 3);
+  max-height: calc(100dvh - var(--bar-height) - var(--gap-out) * 3);
+}
+
+.theme-list {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.theme-option {
+  padding: 0.35rem 0.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.theme-option[hidden] {
+  display: none;
+}
+
+/* Hover and the keyboard cursor are one state, as in the shell. */
+.theme-option:hover,
+.theme-option.is-cursor {
+  background: var(--state-hover);
+  color: var(--accent-text);
+}
+
+.theme-option.is-cursor {
+  background: var(--state-selected);
+}
+
+.theme-option-check {
+  visibility: hidden;
+  color: var(--accent-text);
+}
+
+.theme-option.is-current .theme-option-check {
+  visibility: visible;
+}
+
+.swatches {
+  display: flex;
+  outline: 1px solid var(--rule);
+}
+
+.swatches span {
+  width: 0.55rem;
+  height: 1.05rem;
+}
+
+/* The key list opens in the middle, like Omarchy's own keybindings menu. */
+.keys-panel {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(30rem, calc(100vw - var(--gap-out) * 2));
+  height: fit-content;
+  max-height: calc(100dvh - var(--gap-out) * 2);
+  padding: 1.25rem 1.4rem;
+}
+
+.keys-panel::backdrop {
+  background: var(--scrim);
+}
+
+.keys {
+  margin: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.keys > div {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.keys dt {
+  color: var(--fg-dim);
+  text-align: right;
+}
+
+.keys dd {
+  margin: 0;
+}
+
+.keys-secret {
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  color: var(--fg-dim);
+  font-size: 0.8125rem;
+  display: flex;
+  gap: 0.6em;
+}
+
+.keys-secret .glyph {
+  color: var(--magenta-text);
+  font-size: 1rem;
+}
+
+/* ------------------------------------------------------------ toasts */
+
+/* Stacked top right, under the bar, with the shell's countdown line along the bottom. */
+.toasts {
+  position: fixed;
+  top: calc(var(--bar-height) + var(--gap-out));
+  right: var(--gap-out);
+  z-index: 40;
+  width: min(22rem, calc(100vw - var(--gap-out) * 2));
+  display: grid;
+  gap: calc(var(--gap-in) * 2);
+  pointer-events: none;
+}
+
+.toast {
+  --toast-duration: 5s;
+  position: relative;
+  padding: 0.75rem 0.9rem 0.85rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.8rem;
+  border: var(--border-size) solid var(--accent);
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 0.875rem/1.45 var(--font-mono);
+  pointer-events: auto;
+  cursor: pointer;
+  animation: toast-in 140ms ease-out;
+}
+
+.toast-glyph {
+  grid-row: span 2;
+  align-self: center;
+  color: var(--accent-text);
+  font-size: 1.5rem;
+}
+
+.toast-summary {
+  color: var(--fg-bright);
+  font-weight: 700;
+}
+
+.toast::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  transform-origin: left;
+  animation: toast-countdown var(--toast-duration) linear forwards;
+}
+
+/* Hovering pauses the countdown, like the shell. */
+.toast:hover::after {
+  animation-play-state: paused;
+}
+
+.toast.restart::after {
+  animation: none;
+}
+
+.toast.leaving {
+  opacity: 0;
+  transition: opacity 120ms ease-in;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.4rem);
+  }
+}
+
+@keyframes toast-countdown {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The countdown is a timer, not decoration: keep its real length. */
+  .toast::after {
+    animation-duration: var(--toast-duration) !important;
+  }
+}
+
+/* -------------------------------------------------------- screensaver */
+
+.screensaver {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  cursor: none;
+}
+
+.screensaver canvas {
+  display: block;
+}
+
+.screensaver-hint {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 0;
+  right: 0;
+  margin: 0;
+  color: var(--fg-dim);
+  font: 400 0.75rem var(--font-mono);
+  text-align: center;
+}
